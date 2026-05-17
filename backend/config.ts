@@ -10,7 +10,8 @@ const config = {
     get emailFrom() { return process.env.EMAIL_FROM || 'karlee.lind@ethereal.email'; },
     smtpOptions: {
         get host() { return process.env.SMTP_HOST || 'smtp.ethereal.email'; },
-        port: 587,
+        port: 465,
+        secure: true,
         auth: {
             get user() { return process.env.SMTP_USER || 'karlee.lind@ethereal.email'; },
             get pass() { return process.env.SMTP_PASS || ''; }
