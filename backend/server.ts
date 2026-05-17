@@ -25,6 +25,11 @@ app.use('/accounts', accountsController);
 // swagger docs route
 app.use('/api-docs', swaggerDocs);
 
+// redirect root to api-docs
+app.get('/', (req: Request, res: Response) => {
+    res.redirect('/api-docs');
+});
+
 // global error handler — must have 4 params for Express to recognize it
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     errorHandler(err, req, res, next);
