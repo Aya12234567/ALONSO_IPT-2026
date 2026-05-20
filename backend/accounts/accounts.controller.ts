@@ -41,6 +41,7 @@ function registerSchema(req: any, res: any, next: any) {
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
         email: Joi.string().email().required(),
+        origin: Joi.string().optional()  
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
         acceptTerms: Joi.boolean().valid(true).required()
@@ -129,7 +130,7 @@ function authenticate(req: any, res: any, next: any) {
 }
 
 function refreshToken(req: any, res: any, next: any) {
-    const token = req.cookies.refreshToken;
+    const token = req.body.token || req.cookies.refreshToken;
     const ipAddress = req.ip;
     accountService.refreshToken({ token, ipAddress })
         .then(({ refreshToken, ...account }) => {
@@ -167,7 +168,8 @@ function verifyEmail(req: any, res: any, next: any) {
 }
 
 function forgotPassword(req: any, res: any, next: any) {
-    accountService.forgotPassword(req.body, req.get('origin'))
+    const origin = req.get('origin') || req.body.origin;
+    accountService.forgotPassword(req.body, origin)
         .then(() => res.json({ message: 'Please check your email for password reset instructions' }))
         .catch(next);
 }
