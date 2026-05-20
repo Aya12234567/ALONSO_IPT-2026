@@ -5,10 +5,8 @@ import authorize from '../_middleware/authorize';
 import Role from '../_helpers/role';
 import accountService from './account.service';
 
-// ✅ router defined at top
 const router = express.Router();
 
-// routes
 router.post('/authenticate', authenticateSchema, authenticate);
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
@@ -23,10 +21,8 @@ router.post('/', authorize(Role.Admin), createSchema, create);
 router.put('/:id', authorize(), updateSchema, update);
 router.delete('/:id', authorize(), _delete);
 
-// ✅ router exported at bottom
 export default router;
 
-// schema functions
 function authenticateSchema(req: any, res: any, next: any) {
     const schema = Joi.object({
         email: Joi.string().required(),
@@ -41,7 +37,6 @@ function registerSchema(req: any, res: any, next: any) {
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
         email: Joi.string().email().required(),
-        origin: Joi.string().optional()  
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
         acceptTerms: Joi.boolean().valid(true).required()
@@ -58,7 +53,8 @@ function verifyEmailSchema(req: any, res: any, next: any) {
 
 function forgotPasswordSchema(req: any, res: any, next: any) {
     const schema = Joi.object({
-        email: Joi.string().email().required()
+        email: Joi.string().email().required(),
+        origin: Joi.string().optional()
     });
     validateRequest(req, next, schema);
 }
@@ -117,10 +113,10 @@ function updateSchema(req: any, res: any, next: any) {
     validateRequest(req, next, schema);
 }
 
-// route functions
 function authenticate(req: any, res: any, next: any) {
     const { email, password } = req.body;
     const ipAddress = req.ip;
+
     accountService.authenticate({ email, password, ipAddress })
         .then(({ refreshToken, ...account }) => {
             setTokenCookie(res, refreshToken);
@@ -132,6 +128,7 @@ function authenticate(req: any, res: any, next: any) {
 function refreshToken(req: any, res: any, next: any) {
     const token = req.body.token || req.cookies.refreshToken;
     const ipAddress = req.ip;
+
     accountService.refreshToken({ token, ipAddress })
         .then(({ refreshToken, ...account }) => {
             setTokenCookie(res, refreshToken);
@@ -169,6 +166,7 @@ function verifyEmail(req: any, res: any, next: any) {
 
 function forgotPassword(req: any, res: any, next: any) {
     const origin = req.get('origin') || req.body.origin;
+
     accountService.forgotPassword(req.body, origin)
         .then(() => res.json({ message: 'Please check your email for password reset instructions' }))
         .catch(next);
@@ -196,6 +194,7 @@ function getById(req: any, res: any, next: any) {
     if (Number(req.params.id) !== req.auth.id && req.auth.role !== Role.Admin) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
+
     accountService.getById(req.params.id)
         .then((account: any) => account ? res.json(account) : res.sendStatus(404))
         .catch(next);
@@ -211,6 +210,7 @@ function update(req: any, res: any, next: any) {
     if (Number(req.params.id) !== req.auth.id && req.auth.role !== Role.Admin) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
+
     accountService.update(req.params.id, req.body)
         .then((account: any) => res.json(account))
         .catch(next);
@@ -220,6 +220,7 @@ function _delete(req: any, res: any, next: any) {
     if (Number(req.params.id) !== req.auth.id && req.auth.role !== Role.Admin) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
+
     accountService.delete(req.params.id)
         .then(() => res.json({ message: 'Account deleted successfully' }))
         .catch(next);
@@ -232,5 +233,6 @@ function setTokenCookie(res: any, token: any) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax'
     };
+
     res.cookie('refreshToken', token, cookieOptions);
 }
