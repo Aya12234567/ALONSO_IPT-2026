@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'https://ipt-2026-frontend-ktmy.onrender.com',
+    origin: process.env.CORS_ORIGIN || 'https://alonso-ipt-2026-frontend.onrender.com',
     credentials: true
 }));
 app.use('/accounts', accountsController);
